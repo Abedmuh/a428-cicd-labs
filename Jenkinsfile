@@ -1,11 +1,21 @@
 pipeline {
+    triggers {
+        pollSCM('H/2 * * * *') 
+    }
     agent {
         docker {
-            image 'node:16-buster-slim' 
+            image 'node:16-buster-slim'
             args '-p 3000:3000' 
         }
     }
+    
+    
     stages {
+        stage('Git prep') {
+            steps {
+                git branch: 'react-app', url: 'https://github.com/Abedmuh/a428-cicd-labs'
+            }
+        }
         stage('Build') { 
             steps {
                 sh 'npm install'
@@ -21,6 +31,13 @@ pipeline {
             steps {
                 sh './jenkins/scripts/deliver.sh'
                 input message: 'Sudah selesai menggunakan React App? (Klik "Proceed" untuk mengakhiri)'
+                sh './jenkins/scripts/kill.sh' 
+            }
+        }
+        stage('Deploy') { 
+            steps {
+                sh './jenkins/scripts/deliver.sh' 
+                input message: 'Sudah selesai menggunakan React App? (Klik "Proceed" untuk mengakhiri)' 
                 sh './jenkins/scripts/kill.sh' 
             }
         }
